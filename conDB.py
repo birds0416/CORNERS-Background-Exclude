@@ -1,6 +1,33 @@
+import json
 import psycopg2
 from psycopg2.extensions import AsIs
+from tkinter import messagebox
+
 from config import config
+
+def add_to_json(new_data, filename='data.json'):
+    with open(filename, 'r+') as file:
+        file_data = json.load(file)
+        file_data["DB_Data"].append(new_data)
+        file.seek(0)
+        json.dump(file_data, file, indent=4)
+
+def delete_from_json(site_id, device_id, reg_type, filename='data.json'):
+    with open(filename, 'r', encoding='utf-8') as file:
+        file_data = json.load(file)
+
+        temp = file_data.get("DB_Data")
+        for idx, obj in enumerate(temp):
+            if obj["site_id"] == site_id and obj["device_id"] == device_id and obj["reg_type"] == reg_type:
+                del temp[idx]
+                break
+
+    with open("data.json", 'w') as f:
+        json.dump(file_data, f, indent=4)
+
+def update_in_json(site_id, device_id, reg_type, update_data, filename='data.json'):
+    return
+
 
 # DB에 연결
 def connect():
@@ -78,7 +105,7 @@ def create_table():
             conn.close()
 
 # DB 테이블에 데이터 삽입
-def insert_data(site_id, device_id, reg_type, coordinates):
+def insert_data(site_id, device_id, reg_type, coordinates, imgPath):
     """ insert a new vendor into the item data """
     sql = """INSERT INTO config_values(site_id, device_id, reg_type, coordinates) VALUES(%s, %s, %s, %s)"""
     record_data = (site_id, device_id, reg_type, coordinates)
@@ -99,6 +126,14 @@ def insert_data(site_id, device_id, reg_type, coordinates):
 
         # commit the changes to the database
         conn.commit()
+        add_data = {
+            "site_id": site_id,
+            "device_id": device_id,
+            "reg_type": reg_type,
+            "coordinates": coordinates,
+            "img_path": imgPath
+        }
+        add_to_json(add_data)
         print("INSERT INTO config_values: SUCCESS")
 
         # close communication with the database
@@ -112,7 +147,7 @@ def insert_data(site_id, device_id, reg_type, coordinates):
             conn.close()
 
 # DB 테이블에서 데이터 삭제
-def delete_data(item_id, item_val):
+def delete_data(site_id, device_id, reg_type):
     """ delete part by id_val """
     conn = None
     rows_deleted = 0
@@ -128,14 +163,21 @@ def delete_data(item_id, item_val):
         cur = conn.cursor()
 
         # execute the UPDATE  statement
-        cur.execute("DELETE FROM config_values WHERE %s = %s", [AsIs(item_id), item_val])
+        cur.execute("DELETE FROM config_values WHERE site_id = %s and device_id = %s and reg_type = %s", (site_id, device_id, reg_type))
 
         # get the number of updated rows
         rows_deleted = cur.rowcount
 
         # Commit the changes to the database
         conn.commit()
-        print("DELETE FROM config_values: SUCCESS")
+        if rows_deleted != 0:
+            print("DELETE FROM config_values: SUCCESS")
+            messagebox.showinfo(title="Delete Data Success", message="DELETE FROM config_values: SUCCESS")
+        else:
+            print("DELETE FROM config_values: NO MATCHING DATA")
+            messagebox.showwarning(title="Delete Data Success", message="DELETE FROM config_values: NO MATCHING DATA")
+
+        delete_from_json(site_id, device_id, reg_type)
 
         # Close communication with the PostgreSQL database
         cur.close()
@@ -150,11 +192,11 @@ def delete_data(item_id, item_val):
     return rows_deleted
 
 # DB 테이블에서 데이터 업데이트
-def update_data(update_item, update_val, item_id, item_val):
+def update_data(update_item, update_val, siteID, deviceID, regType):
     """ update vendor name based on the vendor id """
     sql = """ UPDATE config_values
                 SET %s = %s
-                WHERE %s = %s"""
+                WHERE site_id = %s and device_id = %s and reg_type = %s"""
     conn = None
     updated_rows = 0
 
@@ -169,14 +211,21 @@ def update_data(update_item, update_val, item_id, item_val):
         cur = conn.cursor()
 
         # execute the UPDATE  statement
-        cur.execute(sql, [AsIs(update_item), update_val, AsIs(item_id), item_val])
+        cur.execute(sql, [AsIs(update_item), update_val, siteID, deviceID, regType])
 
         # get the number of updated rows
         updated_rows = cur.rowcount
 
         # Commit the changes to the database
         conn.commit()
-        print("UPDATE config_values: SUCCESS")
+        if updated_rows != 0:
+            print("UPDATE config_values: SUCCESS")
+            messagebox.showinfo(title="UPDATE config_values Success", message="UPDATE config_values: SUCCESS")
+        else:
+            print("UPDATE config_values: NO MATCHING DATA")
+            messagebox.showwarning(title="UPDATE config_values Success", message="UPDATE config_values: NO MATCHING DATA")
+
+        update_in_json(siteID, deviceID, regType, update_val)
 
         # Close communication with the PostgreSQL database
         cur.close()
@@ -189,3 +238,45 @@ def update_data(update_item, update_val, item_id, item_val):
             conn.close()
 
     return updated_rows
+
+# DB에서 특정 행 데이터 가져오기
+def select_row(siteID, deviceID, regType):
+    """ select row based on item_id """
+    sql = """ select *
+                FROM config_values
+                WHERE site_id = %s and device_id = %s and reg_type = %s"""
+    conn = None
+    row = ""
+
+    try:
+        # read database configuration
+        params = config()
+
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+
+        # create a new cursor
+        cur = conn.cursor()
+
+        # execute the UPDATE  statement
+        cur.execute(sql, (siteID, deviceID, regType))
+        row = cur.fetchone()
+        path = ""
+        with open('data.json', 'r', encoding='utf-8') as readfile:
+            file_data = json.load(readfile)
+            temp = file_data.get("DB_Data")
+            for idx, obj in enumerate(temp):
+                if obj["site_id"] == siteID and obj["device_id"] == deviceID and obj["reg_type"] == regType:
+                    path = obj["img_path"]
+                    break
+
+        # Close communication with the PostgreSQL database
+        cur.close()
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    return row, path

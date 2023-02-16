@@ -1,0 +1,53 @@
+{
+    "DB_Data": [
+        {
+            "site_id": "220901",
+            "device_id": "11",
+            "reg_type": "2",
+            "coordinates": "502,460, 136,796, 292,1038, 822,926",
+            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/background_exclusion_tool/images/image1.png"
+        },
+        {
+            "site_id": "220901",
+            "device_id": "12",
+            "reg_type": "1",
+            "coordinates": "1076,954, 452,942, 550,1130, 1058,1136",
+            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/background_exclusion_tool/images/image2.png"
+        },
+        {
+            "site_id": "220901",
+            "device_id": "12",
+            "reg_type": "2",
+            "coordinates": "1072,1270, 6,1268, 6,1904, 1068,1914",
+            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/background_exclusion_tool/images/image2.png"
+        },
+        {
+            "site_id": "220901",
+            "device_id": "13",
+            "reg_type": "1",
+            "coordinates": "1056,14, 16,20, 12,1110, 1050,1112",
+            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/background_exclusion_tool/images/image3.png"
+        },
+        {
+            "site_id": "220901",
+            "device_id": "13",
+            "reg_type": "2",
+            "coordinates": "1066,1556, 14,1562, 22,1898, 1076,1906",
+            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/background_exclusion_tool/images/image3.png"
+        },
+        {
+            "site_id": "220901",
+            "device_id": "456",
+            "reg_type": "1",
+            "coordinates": "832,288, 400,512, 126,1280, 680,1284",
+            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/background_exclusion_tool/images/image1.png"
+        },
+        {
+            "site_id": "220901",
+            "device_id": "123456",
+            "reg_type": "0",
+            "coordinates": "374,710, 174,828, 318,1148, 714,1082 : 840,484, 570,256, 304,278, 140,510",
+            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/background_exclusion_tool/images/image2.png"
+        }
+    ]
+}
