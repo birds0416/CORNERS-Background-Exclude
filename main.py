@@ -17,6 +17,7 @@
 
 import cv2
 import numpy as np
+import psycopg2
 import os
 import json
 import vals
@@ -284,7 +285,15 @@ def updateBtn():
     global modtemp
     global coord_list
     if uIDvalue.get() != 'coordinates':
-        update_data(uIDvalue.get(), uVLvalue.get(), sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
+        if int(rTPvalue.get()) != 0 and int(rTPvalue.get()) != 1 and int(rTPvalue.get()) != 2:
+            messagebox.showwarning(title="Wrong Reg Type", message="예외구역유형은 0, 1, 2중 하나입니다.")
+            raise ValueError("INSERT INTO config_values: FAILURE")
+        else:
+            if uIDvalue.get() != 'site_id' or uIDvalue.get() != 'device_id':
+                messagebox.showwarning(title="Wrong Column Name", message="해당 항목이 없습니다.")
+            else:
+                update_data(uIDvalue.get(), uVLvalue.get(), sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
+
     elif uIDvalue.get() == 'coordinates':
         modify_row_data, mod_imgPath = select_row(sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
         tempdata = modify_row_data[3]
