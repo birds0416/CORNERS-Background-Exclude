@@ -303,7 +303,6 @@ def updateBtn():
         
         for tmp in tempdata:
             each = tmp.split(', ')
-            print(each)
             for e in each:
                 X = int(e.split(',')[0])
                 Y = int(e.split(',')[1])
