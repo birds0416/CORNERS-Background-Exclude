@@ -188,7 +188,6 @@ def modifyImg(image_path, pnt_datas):
         if ismodtempClear:
             if event == cv2.EVENT_LBUTTONDOWN:
                 coord_list.append([x * 2, y * 2])
-                print(coord_list)
                 modtemp.append([x, y])
                 cv2.circle(img, (x, y), 3, (255, 255, 0), 5)
 
@@ -203,7 +202,6 @@ def modifyImg(image_path, pnt_datas):
         cv2.imshow("image", img)
 
         if len(coord_list) == 2 or len(pnt_datas) == 2:
-            print(coord_list)
             img_copy = img.copy()
             cv2.polylines(img_copy, np.int32([modtemp]), True, (0, 255, 0), 2)
             cv2.imshow("image", img_copy)
@@ -296,27 +294,34 @@ def updateBtn():
 
     elif uIDvalue.get() == 'coordinates':
         modify_row_data, mod_imgPath = select_row(sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
+
+        # tempdata는 길이가 1인 string 좌표
         tempdata = modify_row_data[3]
         pnts = []
-        if ':' in modify_row_data[3]:
+        if ':' in tempdata:
             tempdata = modify_row_data[3].split(":")
+        else:
+            tempdata = modify_row_data[3].split(", ")
         
         for tmp in tempdata:
-            each = tmp.split(', ')
-            for e in each:
-                X = int(e.split(',')[0])
-                Y = int(e.split(',')[1])
-                pnts.append([X, Y])
+            X = int(tmp.split(',')[0])
+            Y = int(tmp.split(',')[1])
+            pnts.append([X, Y])
 
         modifyImg(mod_imgPath, pnts)
         coordinates = work.setcoordinates(coord_list, work.triangle)
         uVLEntry.insert(0, coordinates)
         update_data(uIDvalue.get(), uVLvalue.get(), sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
 
+def sample():
+    print("cbal")
+    
 if __name__ == "__main__":
     baserow = 0
     empty0 = Label(win, text='     \n   ')
     empty0.grid(column=0, row=baserow)
+    Button(text="박스 그리기", command=sample).grid(row=0, column=0)
+    Button(text="박스 저장", command=sample).grid(row=0, column=1)
 
     ''' Image Load Part '''
     imgPathEntry = Entry(win, width=15)

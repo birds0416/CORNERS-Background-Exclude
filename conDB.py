@@ -38,7 +38,7 @@ def update_in_json(site_id, device_id, reg_type, update_id, update_data, filenam
         for idx, obj in enumerate(temp):
             if obj["site_id"] == site_id and obj["device_id"] == device_id and obj["reg_type"] == reg_type:
                 origin = temp[idx][update_id]
-                temp[idx][update_id] = temp[idx][update_id].replace(origin, update_data)
+                temp[idx][update_id] = update_data
                 print("UPDATE data.json: SUCCESS")
             else:
                 print("UPDATE data.json: NO MATCHING DATA")
@@ -276,6 +276,15 @@ def select_row(siteID, deviceID, regType):
                 WHERE site_id = %s and device_id = %s and reg_type = %s"""
     conn = None
     row = ""
+    
+    path = ""
+    with open('data.json', 'r', encoding='utf-8') as readfile:
+        file_data = json.load(readfile)
+        temp = file_data.get("DB_Data")
+        for idx, obj in enumerate(temp):
+            if obj["site_id"] == siteID and obj["device_id"] == deviceID and obj["reg_type"] == regType:
+                path = obj["img_path"]
+                break
 
     try:
         # read database configuration
@@ -290,14 +299,6 @@ def select_row(siteID, deviceID, regType):
         # execute the UPDATE  statement
         cur.execute(sql, (siteID, deviceID, regType))
         row = cur.fetchone()
-        path = ""
-        with open('data.json', 'r', encoding='utf-8') as readfile:
-            file_data = json.load(readfile)
-            temp = file_data.get("DB_Data")
-            for idx, obj in enumerate(temp):
-                if obj["site_id"] == siteID and obj["device_id"] == deviceID and obj["reg_type"] == regType:
-                    path = obj["img_path"]
-                    break
 
         # Close communication with the PostgreSQL database
         cur.close()

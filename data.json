@@ -1,39 +1,5 @@
 {
     "DB_Data": [
-        {
-            "site_id": "220901",
-            "device_id": "13",
-            "reg_type": "1",
-            "coordinates": "800,138, 390,150, 232,758, 522,1200",
-            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/background_exclusion_tool/images/image2.png"
-        },
-        {
-            "site_id": "220901",
-            "device_id": "13",
-            "reg_type": "1",
-            "coordinates": "696,400, 276,424, 222,974, 722,934",
-            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/background_exclusion_tool/images/image2.png"
-        },
-        {
-            "site_id": "220901",
-            "device_id": "11",
-            "reg_type": "2",
-            "coordinates": "680,464, 380,508, 284,946, 788,892",
-            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/background_exclusion_tool/images/image1.png"
-        },
-        {
-            "site_id": "220901",
-            "device_id": "112",
-            "reg_type": "0",
-            "coordinates": "218,188, 678,264, 692,454, 392,572",
-            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/images/image2.png"
-        },
-        {
-            "site_id": "220901",
-            "device_id": "15",
-            "reg_type": "0",
-            "coordinates": "698,256, 350,270, 318,804, 798,712 : 788,798, 430,886, 616,1050, 894,934",
-            "img_path": "C:/Users/USER/Desktop/Programs/Corners_programs/images/image2.png"
-        }
+        
     ]
 }
