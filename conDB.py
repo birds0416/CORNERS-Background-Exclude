@@ -9,6 +9,7 @@ def add_to_json(new_data, filename='data.json'):
     with open(filename, 'r+') as file:
         file_data = json.load(file)
         file_data["DB_Data"].append(new_data)
+        print("INSERT INTO data.json: SUCCESS")
         file.seek(0)
         json.dump(file_data, file, indent=4)
 
@@ -20,13 +21,30 @@ def delete_from_json(site_id, device_id, reg_type, filename='data.json'):
         for idx, obj in enumerate(temp):
             if obj["site_id"] == site_id and obj["device_id"] == device_id and obj["reg_type"] == reg_type:
                 del temp[idx]
+                print("DELETE FROM data.json: SUCCESS")
+            else:
+                print("DELETE FROM data.json: NO MATCHING DATA")
                 break
 
     with open("data.json", 'w') as f:
         json.dump(file_data, f, indent=4)
 
-def update_in_json(site_id, device_id, reg_type, update_data, filename='data.json'):
-    return
+def update_in_json(site_id, device_id, reg_type, update_id, update_data, filename='data.json'):
+    with open(filename, 'r', encoding='utf-8') as file:
+        file_data = json.load(file)
+
+        temp = file_data.get("DB_Data")
+        for idx, obj in enumerate(temp):
+            if obj["site_id"] == site_id and obj["device_id"] == device_id and obj["reg_type"] == reg_type:
+                origin = temp[idx][update_id]
+                temp[idx][update_id] = temp[idx][update_id].replace(origin, update_data)
+                print("UPDATE data.json: SUCCESS")
+            else:
+                print("UPDATE data.json: NO MATCHING DATA")
+                break
+
+    with open("data.json", 'w') as f:
+        json.dump(file_data, f, indent=4)
 
 
 # DB에 연결
@@ -212,6 +230,7 @@ def update_data(update_item, update_val, siteID, deviceID, regType):
 
         # execute the UPDATE  statement
         cur.execute(sql, [AsIs(update_item), update_val, siteID, deviceID, regType])
+        print(type(update_item))
 
         # get the number of updated rows
         updated_rows = cur.rowcount
@@ -225,7 +244,7 @@ def update_data(update_item, update_val, siteID, deviceID, regType):
             print("UPDATE config_values: NO MATCHING DATA")
             messagebox.showwarning(title="UPDATE config_values Success", message="UPDATE config_values: NO MATCHING DATA")
 
-        update_in_json(siteID, deviceID, regType, update_val)
+        update_in_json(siteID, deviceID, regType, update_item, update_val)
 
         # Close communication with the PostgreSQL database
         cur.close()

@@ -203,7 +203,6 @@ def modifyImg(image_path, pnt_datas):
 
         if len(coord_list) == 2 or len(pnt_datas) == 2:
             print(coord_list)
-            work.settriangle(False)
             img_copy = img.copy()
             cv2.polylines(img_copy, np.int32([modtemp]), True, (0, 255, 0), 2)
             cv2.imshow("image", img_copy)
@@ -301,7 +300,7 @@ def updateBtn():
             pnts.append([X, Y])
 
         modifyImg(mod_imgPath, pnts)
-        coordinates = work.setcoordinates(coord_list, work.settriangle)
+        coordinates = work.setcoordinates(coord_list, work.triangle)
         uVLEntry.insert(0, coordinates)
         update_data(uIDvalue.get(), uVLvalue.get(), sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
 
