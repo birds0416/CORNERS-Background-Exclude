@@ -46,7 +46,7 @@ except:
 win= Tk()
 win.title("대상LS 예외구역 설정 Tool")
 #Set the geometry of Tkinter frame
-win.geometry("400x600")
+win.geometry("400x800")
 
 # returns is value is None or not
 def isEmpty(value):
@@ -134,25 +134,32 @@ def processImg(image_path):
             cv2.destroyWindow("image")
             break
 
+modtemp = []
 def modifyImg(image_path, pnt_datas):
     img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
     img = cv2.resize(img, (540, 960))
+    imgPathEntry.insert(0, image_path)
+    uVLEntry.delete(0, END)
 
     global modtemp
-    modtemp = []
+    global coord_list
+    if isEmpty(coord_list) != True:
+        coord_list.clear()
+
     for pnt in pnt_datas:
         modtemp.append([pnt[0] / 2, pnt[1] / 2])
 
-    xlist = []
-    ylist = []
-    for p in modtemp:
-        xlist.append(p[0])
-        ylist.append(p[1])
+    ''' cv2.EVENT_MOUSEMOVE 마우스 포인터가 박스 위에 있을 때 위한 그림 좌표 계산 '''
+    # xlist = []
+    # ylist = []
+    # for p in modtemp:
+    #     xlist.append(p[0])
+    #     ylist.append(p[1])
 
-    xmin = min(xlist)
-    xmax = max(xlist)
-    ymin = min(ylist)
-    ymax = max(ylist)
+    # xmin = min(xlist)
+    # xmax = max(xlist)
+    # ymin = min(ylist)
+    # ymax = max(ylist)
 
     global ismodtempClear
     ismodtempClear = False
@@ -160,6 +167,7 @@ def modifyImg(image_path, pnt_datas):
     def click_event(event, x, y, flags, param):
         # checking for shift input
         # shift키 누르면 지정좌표 색바꿈
+        global coord_list
         global line_color
         global modtemp
         global ismodtempClear
@@ -168,7 +176,6 @@ def modifyImg(image_path, pnt_datas):
             if event == cv2.EVENT_RBUTTONDOWN:
                 modtemp.clear()
                 ismodtempClear = True
-                pnt_datas.clear()
         else:
             line_color = (0, 255, 0)
 
@@ -179,8 +186,10 @@ def modifyImg(image_path, pnt_datas):
         
         if ismodtempClear:
             if event == cv2.EVENT_LBUTTONDOWN:
-                pnt_datas.append([x * 2, y * 2])
+                coord_list.append([x * 2, y * 2])
+                print(coord_list)
                 modtemp.append([x, y])
+                cv2.circle(img, (x, y), 3, (255, 255, 0), 5)
 
 
     # Display the image
@@ -188,44 +197,45 @@ def modifyImg(image_path, pnt_datas):
     cv2.setMouseCallback('image', click_event)
     global line_color
     line_color = (0, 255, 0)
-
+    
     while True:
         cv2.imshow("image", img)
 
-        if modtemp != None:
-            img_copy = img.copy()
-            for i in range(len(modtemp)):
-                cv2.circle(img_copy, modtemp[i], 1, (255, 255, 0), 5)
-            cv2.imshow("image", img_copy)
-
-        if len(pnt_datas) == 2:
+        if len(coord_list) == 2 or len(pnt_datas) == 2:
+            print(coord_list)
+            work.settriangle(False)
             img_copy = img.copy()
             cv2.polylines(img_copy, np.int32([modtemp]), True, (0, 255, 0), 2)
             cv2.imshow("image", img_copy)
 
-        if len(pnt_datas) == 3:
+        if len(coord_list) == 3 or len(pnt_datas) == 3:
+            work.settriangle(True)
             img_copy = img.copy()
             cv2.polylines(img_copy, np.int32([modtemp]), True, line_color, 2)
             cv2.imshow("image", img_copy)
         
-        if len(pnt_datas) >= 4 and len(pnt_datas) < 6:
+        if len(coord_list) >= 4 and len(coord_list) < 6 or len(pnt_datas) == 4:
+            work.settriangle(False)
             img_copy = img.copy()
             cv2.polylines(img_copy, np.int32([modtemp[:4]]), True, line_color, 2)
             cv2.imshow("image", img_copy)
 
-        if len(pnt_datas) == 6:
+        if len(coord_list) == 6 or len(pnt_datas) == 6:
+            work.settriangle(True)
             img_copy = img.copy()
             cv2.polylines(img_copy, np.int32([modtemp[:3]]), True, line_color, 2)
             cv2.polylines(img_copy, np.int32([modtemp[3:]]), True, line_color, 2)
             cv2.imshow("image", img_copy)
         
-        if len(pnt_datas) == 7:
+        if len(coord_list) == 7:
+            work.settriangle(False)
             img_copy = img.copy()
             cv2.polylines(img_copy, np.int32([modtemp[:4]]), True, line_color, 2)
             cv2.polylines(img_copy, np.int32([modtemp[4:]]), True, line_color, 2)
             cv2.imshow("image", img_copy)
         
-        if len(pnt_datas) == 8:
+        if len(coord_list) == 8 or len(pnt_datas) == 8:
+            work.settriangle(False)
             img_copy = img.copy()
             cv2.polylines(img_copy, np.int32([modtemp[:4]]), True, line_color, 2)
             cv2.polylines(img_copy, np.int32([modtemp[4:]]), True, line_color, 2)
@@ -233,7 +243,7 @@ def modifyImg(image_path, pnt_datas):
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
-            cv2.destroyWindow("image")
+            cv2.destroyAllWindows()
             break
             
 def openDrawImg():
@@ -250,6 +260,7 @@ def openDrawImg():
 def saveBtn():
     global coord_list
     global temp
+    global modtemp
     coordinates = work.setcoordinates(coord_list, work.triangle)
     if int(rTPvalue.get()) != 0 and int(rTPvalue.get()) != 1 and int(rTPvalue.get()) != 2:
         messagebox.showwarning(title="Wrong Reg Type", message="예외구역유형은 0, 1, 2중 하나입니다.")
@@ -259,8 +270,9 @@ def saveBtn():
         messagebox.showinfo(title="Save Data Success", message="INSERT INTO config_values: SUCCESS")
         # 좌표값, 파일 경로가 값이 있는 상태면 초기화
         if isEmpty(coord_list) != True:
-            coord_list = []
-            temp = []
+            coord_list.clear()
+            temp.clear()
+            modtemp.clear()
         if isEmpty(imgPathEntry) != True:
             imgPathEntry.delete(0, END)
             imgPathEntry.insert(0, "")
@@ -270,26 +282,28 @@ def deleteBtn():
 
 modify_row_data = None
 def updateBtn():
-    modify_row_data, mod_imgPath = select_row(sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
-    tempdata = modify_row_data[3].split(" ")
-    pnts = []
-    for tmp in tempdata:
-        X = int(tmp.split(",")[0])
-        Y = int(tmp.split(",")[1])
-        pnts.append([X,Y])
-
-    '''TODO
-    각 데이터의 xy좌표를 pnts에 저장완료
-    pnts의 좌표를 작업했던 이미지에 다시 띄우는 작업 필요
-    '''
+    global modtemp
     global coord_list
-    global temp
-    modifyImg(mod_imgPath, pnts)
+    if uIDvalue.get() != 'coordinates':
+        update_data(uIDvalue.get(), uVLvalue.get(), sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
+    elif uIDvalue.get() == 'coordinates':
+        modify_row_data, mod_imgPath = select_row(sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
+        tempdata = modify_row_data[3]
+        pnts = []
+        if ':' in modify_row_data[3]:
+            tempdata = modify_row_data[3].split(":")
+        
+        tempdata = tempdata.split(", ")
+        for tmp in tempdata:
+            each = tmp.split(',')
+            X = int(each[0])
+            Y = int(each[1])
+            pnts.append([X, Y])
 
-
-
-# def updateBtn():
-#     update_data(update_set_id, update_set_val, update_where_id, update_where_val)
+        modifyImg(mod_imgPath, pnts)
+        coordinates = work.setcoordinates(coord_list, work.settriangle)
+        uVLEntry.insert(0, coordinates)
+        update_data(uIDvalue.get(), uVLvalue.get(), sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
 
 if __name__ == "__main__":
     baserow = 0
@@ -297,7 +311,7 @@ if __name__ == "__main__":
     empty0.grid(column=0, row=baserow)
 
     ''' Image Load Part '''
-    imgPathEntry = Entry(win, width=20)
+    imgPathEntry = Entry(win, width=15)
     imgPathEntry.grid(row=baserow+1, column=1)
     Button(text="이미지 불러오기", command=openDrawImg).grid(row=baserow+1, column=0)
     ''' Image Load Part End '''
@@ -314,9 +328,9 @@ if __name__ == "__main__":
     dIDvalue = StringVar(win, value="기기ID")
     rTPvalue = StringVar(win, value="예외구역유형")
 
-    sIDEntry = Entry(win, textvariable = sIDvalue)
-    dIDEntry = Entry(win, textvariable = dIDvalue)
-    rTPEntry = Entry(win, textvariable = rTPvalue)
+    sIDEntry = Entry(win, width=15, textvariable = sIDvalue)
+    dIDEntry = Entry(win, width=15, textvariable = dIDvalue)
+    rTPEntry = Entry(win, width=15, textvariable = rTPvalue)
 
     sIDEntry.grid(row=baserow+3, column=1)
     dIDEntry.grid(row=baserow+4, column=1)
@@ -330,6 +344,14 @@ if __name__ == "__main__":
     ''' Delete Part End '''
     
     ''' Modify Part '''
+    uIDvalue = StringVar(win, value="항목 이름")
+    uVLvalue = StringVar(win, value="항목 값")
+
+    uIDEntry = Entry(win, width=10, textvariable = uIDvalue)
+    uVLEntry = Entry(win, width=10, textvariable = uVLvalue)
+
+    uIDEntry.grid(row=baserow+4, column=3)
+    uVLEntry.grid(row=baserow+5, column=3)
     Button(text="DB수정", command=updateBtn).grid(row=baserow+6, column=3)
     ''' Modify Part End '''
 
