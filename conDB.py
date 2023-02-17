@@ -37,12 +37,13 @@ def update_in_json(site_id, device_id, reg_type, update_id, update_data, filenam
         temp = file_data.get("DB_Data")
         for idx, obj in enumerate(temp):
             if obj["site_id"] == site_id and obj["device_id"] == device_id and obj["reg_type"] == reg_type:
-                origin = temp[idx][update_id]
                 temp[idx][update_id] = update_data
+                if update_data == "":
+                    print("UPDATE data.json: Update Data EMPTY")
+                    break
                 print("UPDATE data.json: SUCCESS")
             else:
                 print("UPDATE data.json: NO MATCHING DATA")
-                break
 
     with open("data.json", 'w') as f:
         json.dump(file_data, f, indent=4)
@@ -247,13 +248,13 @@ def update_data(update_item, update_val, siteID, deviceID, regType):
         # Commit the changes to the database
         conn.commit()
         if updated_rows != 0:
+            update_in_json(siteID, deviceID, regType, update_item, update_val)
             print("UPDATE config_values: SUCCESS")
             messagebox.showinfo(title="UPDATE config_values Success", message="UPDATE config_values: SUCCESS")
         else:
             print("UPDATE config_values: NO MATCHING DATA")
-            messagebox.showwarning(title="UPDATE config_values Success", message="UPDATE config_values: NO MATCHING DATA")
+            messagebox.showwarning(title="UPDATE config_values FAILURE", message="UPDATE config_values: NO MATCHING DATA")
 
-        update_in_json(siteID, deviceID, regType, update_item, update_val)
 
         # Close communication with the PostgreSQL database
         cur.close()
@@ -278,12 +279,14 @@ def select_row(siteID, deviceID, regType):
     row = ""
     
     path = ""
+    row_data = ""
     with open('data.json', 'r', encoding='utf-8') as readfile:
         file_data = json.load(readfile)
         temp = file_data.get("DB_Data")
         for idx, obj in enumerate(temp):
             if obj["site_id"] == siteID and obj["device_id"] == deviceID and obj["reg_type"] == regType:
                 path = obj["img_path"]
+                row_data = (obj["site_id"], obj["device_id"], obj["reg_type"], obj["coordinates"])
                 break
 
     try:
@@ -304,6 +307,7 @@ def select_row(siteID, deviceID, regType):
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
+        row = row_data
         print(error)
     finally:
         if conn is not None:

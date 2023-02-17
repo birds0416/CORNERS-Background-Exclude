@@ -7,12 +7,22 @@ class SpacePos:
         self.coordinates = ""
 
         self.triangle = True
+        self.four_three = True
+        self.three_four = True
 
     def settriangle(self, val):
         self.triangle = val
         return self.triangle
+    
+    def setfour_three(self, val):
+        self.four_three = val
+        return self.four_three
+    
+    def setthree_four(self, val):
+        self.three_four = val
+        return self.three_four
 
-    def setcoordinates(self, coor_list, triangle):
+    def setcoordinates(self, coor_list, triangle, threeFour, fourThree):
         # 좌표 순서는 RT, LT, LB, RB 순서로 들어옴
         # TODO
         # 사각형이 아닌 삼각형일 경우 처리 필요

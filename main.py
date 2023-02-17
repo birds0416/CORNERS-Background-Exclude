@@ -147,8 +147,10 @@ def modifyImg(image_path, pnt_datas):
     if isEmpty(coord_list) != True:
         coord_list.clear()
 
+    print(pnt_datas)
     for pnt in pnt_datas:
         modtemp.append([pnt[0] / 2, pnt[1] / 2])
+    print(modtemp)
 
     ''' cv2.EVENT_MOUSEMOVE 마우스 포인터가 박스 위에 있을 때 위한 그림 좌표 계산 '''
     # xlist = []
@@ -181,9 +183,10 @@ def modifyImg(image_path, pnt_datas):
             line_color = (0, 255, 0)
 
         if len(modtemp) != 0:
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([modtemp]), True, line_color, 2)
-            cv2.imshow("image", img_copy)
+            pass
+        else:
+            modtemp.clear()
+            ismodtempClear = True
         
         if ismodtempClear:
             if event == cv2.EVENT_LBUTTONDOWN:
@@ -226,7 +229,7 @@ def modifyImg(image_path, pnt_datas):
             cv2.imshow("image", img_copy)
         
         if len(coord_list) == 7:
-            work.settriangle(False)
+            work.setthree_four(False)
             img_copy = img.copy()
             cv2.polylines(img_copy, np.int32([modtemp[:4]]), True, line_color, 2)
             cv2.polylines(img_copy, np.int32([modtemp[4:]]), True, line_color, 2)
@@ -296,17 +299,21 @@ def updateBtn():
         modify_row_data, mod_imgPath = select_row(sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
 
         # tempdata는 길이가 1인 string 좌표
-        tempdata = modify_row_data[3]
         pnts = []
-        if ':' in tempdata:
-            tempdata = modify_row_data[3].split(":")
-        else:
-            tempdata = modify_row_data[3].split(", ")
-        
-        for tmp in tempdata:
-            X = int(tmp.split(',')[0])
-            Y = int(tmp.split(',')[1])
-            pnts.append([X, Y])
+        if modify_row_data != None:
+            tempdata = modify_row_data[3]
+            if ':' in tempdata:
+                tempdata = modify_row_data[3].split(":")
+            else:
+                tempdata = modify_row_data[3].split(", ")
+            
+            for tmp in tempdata:
+                each = tmp.split(", ")
+                print(each)
+                for e in each:
+                    X = int(e.split(',')[0])
+                    Y = int(e.split(',')[1])
+                    pnts.append([X, Y])
 
         modifyImg(mod_imgPath, pnts)
         coordinates = work.setcoordinates(coord_list, work.triangle)
