@@ -301,12 +301,13 @@ def updateBtn():
         if ':' in modify_row_data[3]:
             tempdata = modify_row_data[3].split(":")
         
-        tempdata = tempdata.split(", ")
         for tmp in tempdata:
-            each = tmp.split(',')
-            X = int(each[0])
-            Y = int(each[1])
-            pnts.append([X, Y])
+            each = tmp.split(', ')
+            print(each)
+            for e in each:
+                X = int(e.split(',')[0])
+                Y = int(e.split(',')[1])
+                pnts.append([X, Y])
 
         modifyImg(mod_imgPath, pnts)
         coordinates = work.setcoordinates(coord_list, work.triangle)

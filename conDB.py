@@ -5,6 +5,7 @@ from tkinter import messagebox
 
 from config import config
 
+# Json handling
 def add_to_json(new_data, filename='data.json'):
     with open(filename, 'r+') as file:
         file_data = json.load(file)
@@ -46,7 +47,6 @@ def update_in_json(site_id, device_id, reg_type, update_id, update_data, filenam
     with open("data.json", 'w') as f:
         json.dump(file_data, f, indent=4)
 
-
 # DB에 연결
 def connect():
     """ Connect to the PostgreSQL database server """
@@ -76,6 +76,7 @@ def connect():
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         connection = False
+        print("Connect to PostgreSQL database: FAILURE")
         print(error)
     finally:
         if conn is not None:
@@ -158,6 +159,14 @@ def insert_data(site_id, device_id, reg_type, coordinates, imgPath):
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
+        add_data = {
+            "site_id": site_id,
+            "device_id": device_id,
+            "reg_type": reg_type,
+            "coordinates": coordinates,
+            "img_path": imgPath
+        }
+        add_to_json(add_data)
         print("INSERT INTO config_values: FAILURE")
         print(error)
     finally:
@@ -201,6 +210,7 @@ def delete_data(site_id, device_id, reg_type):
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
+        delete_from_json(site_id, device_id, reg_type)
         print("DELETE FROM config_values: FAILURE")
         print(error)
     finally:
@@ -230,7 +240,6 @@ def update_data(update_item, update_val, siteID, deviceID, regType):
 
         # execute the UPDATE  statement
         cur.execute(sql, [AsIs(update_item), update_val, siteID, deviceID, regType])
-        print(type(update_item))
 
         # get the number of updated rows
         updated_rows = cur.rowcount
@@ -250,6 +259,7 @@ def update_data(update_item, update_val, siteID, deviceID, regType):
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
+        update_in_json(siteID, deviceID, regType, update_item, update_val)
         print("UPDATE config_values: FAILURE")
         print(error)
     finally:

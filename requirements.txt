@@ -1,0 +1,4 @@
+numpy==1.21.6
+opencv_python==4.5.5.64
+psycopg2==2.9.5
+tk==8.6

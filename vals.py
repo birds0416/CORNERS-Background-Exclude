@@ -8,7 +8,6 @@ class SpacePos:
 
         self.triangle = True
 
-
     def settriangle(self, val):
         self.triangle = val
         return self.triangle
