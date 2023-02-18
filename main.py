@@ -21,7 +21,7 @@ import psycopg2
 import os
 import json
 import vals
-from conDB import connect, isCon, create_table, insert_data, delete_data, update_data, select_row
+from conDB import *
 
 # Import Tkinter
 from tkinter import *
