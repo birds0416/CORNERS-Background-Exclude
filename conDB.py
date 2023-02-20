@@ -25,7 +25,6 @@ def delete_from_json(site_id, device_id, reg_type, filename='data.json'):
                 print("DELETE FROM data.json: SUCCESS")
             else:
                 print("DELETE FROM data.json: NO MATCHING DATA")
-                break
 
     with open("data.json", 'w') as f:
         json.dump(file_data, f, indent=4)
