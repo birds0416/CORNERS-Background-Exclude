@@ -29,6 +29,8 @@ from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
 
+import keyboard
+
 work = vals.SpacePos()
 connect()
 create_table()
@@ -56,113 +58,93 @@ def isEmpty(value):
 ''' From here is image processing by opencv'''
 coord_list = []
 temp = []
+resultInsertData = []
+drawData = []
 def processImg(image_path):
     img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
     img = cv2.resize(img, (540, 960))
-    
+
+
+    global coord_list
+    global temp
+    global resultInsertData
+    global drawData
     def click_event(event, x, y, flags, param):
         # checking for left mouse clicks
         # 클릭하여 좌표지정
         global coord_list
         global temp
+        global line_color
+
+        if flags & cv2.EVENT_FLAG_SHIFTKEY:
+            line_color = (0, 0, 255)
+            if event == cv2.EVENT_RBUTTONDOWN:
+                temp = []
+        else:
+            line_color = (0, 255, 0)
+
         if event == cv2.EVENT_LBUTTONDOWN:
             # displaying the coordinates on the Shell
             coord_list.append([x * 2, y * 2])
             temp.append([x, y])
-            
+
         if event == cv2.EVENT_RBUTTONDOWN:
-            if coord_list != None:
+            if temp != None:
                 coord_list = coord_list[:len(coord_list) - 1]
                 temp = temp[:len(temp) - 1]
-        
+
     # Display the image
+    cv2.namedWindow("image")
     cv2.imshow("image", img)
     cv2.setMouseCallback('image', click_event)
+    global line_color
+    line_color = (0, 255, 0)
 
     # Wait until the user closes the window
     while True:
         cv2.imshow("image", img)
 
-        if temp != None:
-            img_copy = img.copy()
-            for i in range(len(temp)):
-                cv2.circle(img_copy, temp[i], 1, (255, 255, 0), 5)
-            cv2.imshow("image", img_copy)
+        img_copy = img.copy()
+        for i in range(len(temp)):
+            cv2.circle(img_copy, temp[i], 1, (255, 255, 0), 5)
 
-        if len(coord_list) == 2:
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([temp]), True, (0, 255, 0), 2)
-            cv2.imshow("image", img_copy)
+        for d in drawData:
+             cv2.polylines(img_copy, np.int32([d]), True, (0, 255, 0), 2)
 
-        if len(coord_list) == 3:
-            work.settriangle(True)
-            # Draw the triangle on the image
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([temp]), True, (0, 255, 0), 2)
-            cv2.imshow("image", img_copy)
-
-        if len(coord_list) >= 4 and len(coord_list) < 6:
-            work.settriangle(False)
-            # Draw the triangle on the image
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([temp[:4]]), True, (0, 255, 0), 2)
-            cv2.imshow("image", img_copy)
-
-        if len(coord_list) == 6:
-            work.settriangle(True)
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([temp[:3]]), True, (0, 255, 0), 2)
-            cv2.polylines(img_copy, np.int32([temp[3:]]), True, (0, 255, 0), 2)
-            cv2.imshow("image", img_copy)
-        
-        if len(coord_list) == 7:
-            work.settriangle(True)
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([temp[:4]]), True, (0, 255, 0), 2)
-            cv2.polylines(img_copy, np.int32([temp[4:]]), True, (0, 255, 0), 2)
-            cv2.imshow("image", img_copy)
-
-        if len(coord_list) == 8:
-            work.settriangle(False)
-            # Draw the triangle on the image
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([temp[:4]]), True, (0, 255, 0), 2)
-            cv2.polylines(img_copy, np.int32([temp[4:]]), True, (0, 255, 0), 2)
-            cv2.imshow("image", img_copy)
+        cv2.polylines(img_copy, np.int32([temp]), True, line_color, 2)
+        cv2.imshow("image", img_copy)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
             cv2.destroyWindow("image")
             break
+        elif key == ord("s"):
+            resultInsertData.append(coord_list)
+            drawData.append(temp)
+            coord_list = []
+            temp = []
 
 modtemp = []
+resultModifyData = []
+drawModifyData = []
 def modifyImg(image_path, pnt_datas):
     img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
     img = cv2.resize(img, (540, 960))
     imgPathEntry.insert(0, image_path)
     uVLEntry.delete(0, END)
 
-    global modtemp
     global coord_list
+    global modtemp
+    global resultModifyData
+    global drawModifyData
     if isEmpty(coord_list) != True:
-        coord_list.clear()
+        coord_list = []
 
-    print(pnt_datas)
-    for pnt in pnt_datas:
-        modtemp.append([pnt[0] / 2, pnt[1] / 2])
-    print(modtemp)
-
-    ''' cv2.EVENT_MOUSEMOVE 마우스 포인터가 박스 위에 있을 때 위한 그림 좌표 계산 '''
-    # xlist = []
-    # ylist = []
-    # for p in modtemp:
-    #     xlist.append(p[0])
-    #     ylist.append(p[1])
-
-    # xmin = min(xlist)
-    # xmax = max(xlist)
-    # ymin = min(ylist)
-    # ymax = max(ylist)
+    for shape in pnt_datas:
+        t = []
+        for pnt in shape:
+            t.append([pnt[0] / 2, pnt[1] / 2])
+        drawModifyData.append(t)
 
     global ismodtempClear
     ismodtempClear = False
@@ -174,26 +156,32 @@ def modifyImg(image_path, pnt_datas):
         global line_color
         global modtemp
         global ismodtempClear
+        global drawModifyData
+
         if flags & cv2.EVENT_FLAG_SHIFTKEY:
             line_color = (0, 0, 255)
             if event == cv2.EVENT_RBUTTONDOWN:
-                modtemp.clear()
+                drawModifyData = []
                 ismodtempClear = True
         else:
             line_color = (0, 255, 0)
 
-        if len(modtemp) != 0:
+        if len(drawModifyData) != 0:
             pass
         else:
-            modtemp.clear()
+            drawModifyData = []
             ismodtempClear = True
         
         if ismodtempClear:
             if event == cv2.EVENT_LBUTTONDOWN:
+                # displaying the coordinates on the Shell
                 coord_list.append([x * 2, y * 2])
                 modtemp.append([x, y])
-                cv2.circle(img, (x, y), 3, (255, 255, 0), 5)
 
+            if event == cv2.EVENT_RBUTTONDOWN:
+                if modtemp != None:
+                    coord_list = coord_list[:len(coord_list) - 1]
+                    modtemp = modtemp[:len(modtemp) - 1]
 
     # Display the image
     cv2.imshow("image", img)
@@ -203,49 +191,26 @@ def modifyImg(image_path, pnt_datas):
     
     while True:
         cv2.imshow("image", img)
-
-        if len(coord_list) == 2 or len(pnt_datas) == 2:
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([modtemp]), True, (0, 255, 0), 2)
-            cv2.imshow("image", img_copy)
-
-        if len(coord_list) == 3 or len(pnt_datas) == 3:
-            work.settriangle(True)
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([modtemp]), True, line_color, 2)
-            cv2.imshow("image", img_copy)
         
-        if len(coord_list) >= 4 and len(coord_list) < 6 or len(pnt_datas) == 4:
-            work.settriangle(False)
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([modtemp[:4]]), True, line_color, 2)
-            cv2.imshow("image", img_copy)
+        img_copy = img.copy()
+        for i in range(len(modtemp)):
+            cv2.circle(img_copy, modtemp[i], 1, (255, 255, 0), 5)
 
-        if len(coord_list) == 6 or len(pnt_datas) == 6:
-            work.settriangle(True)
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([modtemp[:3]]), True, line_color, 2)
-            cv2.polylines(img_copy, np.int32([modtemp[3:]]), True, line_color, 2)
-            cv2.imshow("image", img_copy)
-        
-        if len(coord_list) == 7:
-            work.setthree_four(False)
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([modtemp[:4]]), True, line_color, 2)
-            cv2.polylines(img_copy, np.int32([modtemp[4:]]), True, line_color, 2)
-            cv2.imshow("image", img_copy)
-        
-        if len(coord_list) == 8 or len(pnt_datas) == 8:
-            work.settriangle(False)
-            img_copy = img.copy()
-            cv2.polylines(img_copy, np.int32([modtemp[:4]]), True, line_color, 2)
-            cv2.polylines(img_copy, np.int32([modtemp[4:]]), True, line_color, 2)
-            cv2.imshow("image", img_copy)
+        for d in drawModifyData:
+             cv2.polylines(img_copy, np.int32([d]), True, line_color, 2)
+
+        cv2.polylines(img_copy, np.int32([modtemp]), True, line_color, 2)
+        cv2.imshow("image", img_copy)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
             cv2.destroyAllWindows()
             break
+        elif key == ord("s"):
+            resultModifyData.append(coord_list)
+            drawModifyData.append(modtemp)
+            coord_list = []
+            modtemp = []
             
 def openDrawImg():
     global coord_list
@@ -259,10 +224,9 @@ def openDrawImg():
 ''' End of Opencv processing '''
 
 def saveBtn():
-    global coord_list
-    global temp
+    global resultInsertData
     global modtemp
-    coordinates = work.setcoordinates(coord_list, work.triangle)
+    coordinates = work.setcoordinates(resultInsertData)
     if int(rTPvalue.get()) != 0 and int(rTPvalue.get()) != 1 and int(rTPvalue.get()) != 2:
         messagebox.showwarning(title="Wrong Reg Type", message="예외구역유형은 0, 1, 2중 하나입니다.")
         raise ValueError("INSERT INTO config_values: FAILURE")
@@ -284,7 +248,7 @@ def deleteBtn():
 modify_row_data = None
 def updateBtn():
     global modtemp
-    global coord_list
+    global resultModifyData
     if uIDvalue.get() != 'coordinates':
         if int(rTPvalue.get()) != 0 and int(rTPvalue.get()) != 1 and int(rTPvalue.get()) != 2:
             messagebox.showwarning(title="Wrong Reg Type", message="예외구역유형은 0, 1, 2중 하나입니다.")
@@ -299,36 +263,32 @@ def updateBtn():
         modify_row_data, mod_imgPath = select_row(sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
 
         # tempdata는 길이가 1인 string 좌표
-        pnts = []
+        shapes = []
         if modify_row_data != None:
             tempdata = modify_row_data[3]
             if ':' in tempdata:
-                tempdata = modify_row_data[3].split(":")
+                tempdata = modify_row_data[3].split(" : ")
             else:
                 tempdata = modify_row_data[3].split(", ")
             
             for tmp in tempdata:
                 each = tmp.split(", ")
-                print(each)
+                pnts = []
                 for e in each:
                     X = int(e.split(',')[0])
                     Y = int(e.split(',')[1])
                     pnts.append([X, Y])
-
-        modifyImg(mod_imgPath, pnts)
-        coordinates = work.setcoordinates(coord_list, work.triangle)
+                shapes.append(pnts)
+        
+        modifyImg(mod_imgPath, shapes)
+        coordinates = work.setcoordinates(resultModifyData)
         uVLEntry.insert(0, coordinates)
         update_data(uIDvalue.get(), uVLvalue.get(), sIDvalue.get(), dIDvalue.get(), rTPvalue.get())
-
-def sample():
-    print("cbal")
     
 if __name__ == "__main__":
     baserow = 0
     empty0 = Label(win, text='     \n   ')
     empty0.grid(column=0, row=baserow)
-    Button(text="박스 그리기", command=sample).grid(row=0, column=0)
-    Button(text="박스 저장", command=sample).grid(row=0, column=1)
 
     ''' Image Load Part '''
     imgPathEntry = Entry(win, width=15)

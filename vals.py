@@ -7,46 +7,24 @@ class SpacePos:
         self.coordinates = ""
 
         self.triangle = True
-        self.four_three = True
-        self.three_four = True
 
     def settriangle(self, val):
         self.triangle = val
         return self.triangle
     
-    def setfour_three(self, val):
-        self.four_three = val
-        return self.four_three
-    
-    def setthree_four(self, val):
-        self.three_four = val
-        return self.three_four
-
-    def setcoordinates(self, coor_list, triangle, threeFour, fourThree):
+    def setcoordinates(self, coor_list):
         # 좌표 순서는 RT, LT, LB, RB 순서로 들어옴
         # TODO
         # 사각형이 아닌 삼각형일 경우 처리 필요
         res = ""
         cnt = 0
 
-        if triangle:
-            for item in coor_list:
-                cnt += 1
-                if cnt > 3:
-                    res += " : "
-                    cnt = 1
-                res += str(item[0]) + "," + str(item[1]) + ", "
-                if cnt == 3:
-                    res = res[:len(res) - 2]
-        else:
-            for item in coor_list:
-                cnt += 1
-                if cnt > 4:
-                    res += " : "
-                    cnt = 1
-                res += str(item[0]) + "," + str(item[1]) + ", "
-                if cnt == 4:
-                    res = res[:len(res) - 2]
+        for shape in coor_list:
+            for pnt in shape[:len(shape) - 1]:
+                res += str(pnt[0]) + "," + str(pnt[1]) + ", "
+            res += str(shape[len(shape) - 1][0]) + "," + str(shape[len(shape) - 1][1]) + " : "
+        
+        res = res[:len(res) - 3]
 
         return res
 
