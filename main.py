@@ -49,7 +49,7 @@ except:
 win= Tk()
 win.title("대상LS 예외구역 설정 Tool")
 #Set the geometry of Tkinter frame
-win.geometry("400x800")
+win.geometry("450x400")
 
 # returns is value is None or not
 def isEmpty(value):
@@ -218,9 +218,12 @@ def openDrawImg():
 
     # Read from files
     path = askopenfilename()
-    print("user chose", path)
-    imgPathEntry.insert(0, path)
-    processImg(path)
+    if path != '':
+        print("user chose", path)
+        imgPathEntry.insert(0, path)
+        processImg(path)
+    else:
+        print("Image Not Selected")
 ''' End of Opencv processing '''
 
 def saveBtn():
@@ -287,13 +290,11 @@ def updateBtn():
     
 if __name__ == "__main__":
     baserow = 0
-    empty0 = Label(win, text='     \n   ')
-    empty0.grid(column=0, row=baserow)
 
     ''' Image Load Part '''
     imgPathEntry = Entry(win, width=15)
     imgPathEntry.grid(row=baserow+1, column=1)
-    Button(text="이미지 불러오기", command=openDrawImg).grid(row=baserow+1, column=0)
+    Button(text="이미지 불러오기", command=openDrawImg).grid(row=baserow+1, column=0, padx=10, pady=10)
     ''' Image Load Part End '''
 
     ''' Save Part '''
@@ -316,23 +317,23 @@ if __name__ == "__main__":
     dIDEntry.grid(row=baserow+4, column=1)
     rTPEntry.grid(row=baserow+5, column=1)
 
-    Button(text="DB저장", command=saveBtn).grid(row=baserow+6, column=1)
+    Button(text="저장", width=15, command=saveBtn).grid(row=baserow+6, column=1, padx=10, pady=10)
     ''' Save Part End'''
 
     ''' Delete Part '''
-    Button(text="DB삭제", command=deleteBtn).grid(row=baserow+6, column=2, padx=10)
+    Button(text="삭제", width=15, command=deleteBtn).grid(row=baserow+7, column=1)
     ''' Delete Part End '''
     
     ''' Modify Part '''
     uIDvalue = StringVar(win, value="항목 이름")
     uVLvalue = StringVar(win, value="항목 값")
 
-    uIDEntry = Entry(win, width=10, textvariable = uIDvalue)
-    uVLEntry = Entry(win, width=10, textvariable = uVLvalue)
+    uIDEntry = Entry(win, width=15, textvariable = uIDvalue)
+    uVLEntry = Entry(win, width=15, textvariable = uVLvalue)
 
     uIDEntry.grid(row=baserow+4, column=3)
     uVLEntry.grid(row=baserow+5, column=3)
-    Button(text="DB수정", command=updateBtn).grid(row=baserow+6, column=3)
+    Button(text="수정", width=15, command=updateBtn).grid(row=baserow+6, column=3)
     ''' Modify Part End '''
 
     win.mainloop()
