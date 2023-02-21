@@ -1,7 +1,9 @@
 import json
 import psycopg2
+
 from psycopg2.extensions import AsIs
 from tkinter import messagebox
+from datetime import datetime, date
 
 from config import config
 
@@ -29,23 +31,70 @@ def delete_from_json(site_id, device_id, reg_type, filename='data.json'):
     with open("data.json", 'w') as f:
         json.dump(file_data, f, indent=4)
 
-def update_in_json(site_id, device_id, reg_type, update_id, update_data, filename='data.json'):
-    with open(filename, 'r', encoding='utf-8') as file:
-        file_data = json.load(file)
+def update_in_json(site_id, device_id, reg_type, update_data, imgPath, filename='data.json'):
+    isUpdated = False
 
-        temp = file_data.get("DB_Data")
-        for idx, obj in enumerate(temp):
-            if obj["site_id"] == site_id and obj["device_id"] == device_id and obj["reg_type"] == reg_type:
-                temp[idx][update_id] = update_data
-                if update_data == "":
-                    print("UPDATE data.json: Update Data EMPTY")
-                    break
-                print("UPDATE data.json: SUCCESS")
-            else:
-                print("UPDATE data.json: NO MATCHING DATA")
+    now = datetime.now()
+    today = date.today()
+    current_time = now.strftime("%H:%M:%S")
+    curr_date = str(today) + ' ' + current_time
 
-    with open("data.json", 'w') as f:
-        json.dump(file_data, f, indent=4)
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            file_data = json.load(file)
+
+            temp = file_data.get("DB_Data")
+            for idx, obj in enumerate(temp):
+                if obj["site_id"] == site_id and obj["device_id"] == device_id and obj["reg_type"] == reg_type:
+                    temp[idx]["coordinates"] = update_data
+                    if update_data == "":
+                        print("UPDATE data.json: Update Data EMPTY")
+                        isUpdated = False
+                    print("UPDATE data.json: SUCCESS")
+                    isUpdated = True
+                else:
+                    print("UPDATE data.json: NO MATCHING DATA in data.json")
+            
+            if isUpdated != True:
+                print("UPDATE data.json: FAILURE - NO DATA")
+                print("UPDATE data.json: ADDING DATA...")
+
+                insert_data = {
+                    "site_id": site_id,
+                    "device_id": device_id,
+                    "reg_type": reg_type,
+                    "coordinates": update_data,
+                    "img_path": imgPath,
+                    "saved time": curr_date
+                }
+
+        if isUpdated == True:
+            with open(filename, 'w') as f:
+                json.dump(file_data, f, indent=4)
+        else:
+            with open(filename, 'r+') as file:
+                print("adding")
+                file_data = json.load(file)
+                file_data["DB_Data"].append(insert_data)
+                print("INSERT INTO data.json: SUCCESS")
+                file.seek(0)
+                json.dump(file_data, file, indent=4)
+    
+    except:
+        newJson = {"DB_Data":[]}
+        json_obj = json.dumps(newJson, indent=4)
+        with open("data.json", "w") as outfile:
+            outfile.write(json_obj)
+
+        insert_data = {
+            "site_id": site_id,
+            "device_id": device_id,
+            "reg_type": reg_type,
+            "coordinates": update_data,
+            "img_path": imgPath,
+            "saved time": curr_date
+        }
+        add_to_json(insert_data)
 
 # DB에 연결
 def connect():
@@ -130,6 +179,20 @@ def insert_data(site_id, device_id, reg_type, coordinates, imgPath):
     record_data = (site_id, device_id, reg_type, coordinates)
     conn = None
 
+    now = datetime.now()
+    today = date.today()
+    current_time = now.strftime("%H:%M:%S")
+    curr_date = str(today) + ' ' + current_time
+
+    add_data = {
+        "site_id": site_id,
+        "device_id": device_id,
+        "reg_type": reg_type,
+        "coordinates": coordinates,
+        "img_path": imgPath,
+        "saved time": curr_date
+    }
+    
     try:
         # read database configuration
         params = config()
@@ -145,13 +208,6 @@ def insert_data(site_id, device_id, reg_type, coordinates, imgPath):
 
         # commit the changes to the database
         conn.commit()
-        add_data = {
-            "site_id": site_id,
-            "device_id": device_id,
-            "reg_type": reg_type,
-            "coordinates": coordinates,
-            "img_path": imgPath
-        }
         add_to_json(add_data)
         print("INSERT INTO config_values: SUCCESS")
 
@@ -159,13 +215,6 @@ def insert_data(site_id, device_id, reg_type, coordinates, imgPath):
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
-        add_data = {
-            "site_id": site_id,
-            "device_id": device_id,
-            "reg_type": reg_type,
-            "coordinates": coordinates,
-            "img_path": imgPath
-        }
         add_to_json(add_data)
         print("INSERT INTO config_values: FAILURE")
         print(error)
@@ -220,10 +269,10 @@ def delete_data(site_id, device_id, reg_type):
     return rows_deleted
 
 # DB 테이블에서 데이터 업데이트
-def update_data(update_item, update_val, siteID, deviceID, regType):
+def update_data(update_val, siteID, deviceID, regType, imgPath):
     """ update vendor name based on the vendor id """
     sql = """ UPDATE config_values
-                SET %s = %s
+                SET coordinates = %s
                 WHERE site_id = %s and device_id = %s and reg_type = %s"""
     conn = None
     updated_rows = 0
@@ -239,7 +288,7 @@ def update_data(update_item, update_val, siteID, deviceID, regType):
         cur = conn.cursor()
 
         # execute the UPDATE  statement
-        cur.execute(sql, [AsIs(update_item), update_val, siteID, deviceID, regType])
+        cur.execute(sql, [update_val, siteID, deviceID, regType])
 
         # get the number of updated rows
         updated_rows = cur.rowcount
@@ -247,7 +296,7 @@ def update_data(update_item, update_val, siteID, deviceID, regType):
         # Commit the changes to the database
         conn.commit()
         if updated_rows != 0:
-            update_in_json(siteID, deviceID, regType, update_item, update_val)
+            update_in_json(siteID, deviceID, regType, update_val, imgPath)
             print("UPDATE config_values: SUCCESS")
             messagebox.showinfo(title="UPDATE config_values Success", message="UPDATE config_values: SUCCESS")
         else:
@@ -259,7 +308,7 @@ def update_data(update_item, update_val, siteID, deviceID, regType):
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
-        update_in_json(siteID, deviceID, regType, update_item, update_val)
+        update_in_json(siteID, deviceID, regType, update_val, imgPath)
         print("UPDATE config_values: FAILURE")
         print(error)
     finally:
@@ -275,18 +324,7 @@ def select_row(siteID, deviceID, regType):
                 FROM config_values
                 WHERE site_id = %s and device_id = %s and reg_type = %s"""
     conn = None
-    row = ""
-    
-    path = ""
-    row_data = ""
-    with open('data.json', 'r', encoding='utf-8') as readfile:
-        file_data = json.load(readfile)
-        temp = file_data.get("DB_Data")
-        for idx, obj in enumerate(temp):
-            if obj["site_id"] == siteID and obj["device_id"] == deviceID and obj["reg_type"] == regType:
-                path = obj["img_path"]
-                row_data = (obj["site_id"], obj["device_id"], obj["reg_type"], obj["coordinates"])
-                break
+    row = None
 
     try:
         # read database configuration
@@ -306,10 +344,18 @@ def select_row(siteID, deviceID, regType):
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
+        row_data = None
+        with open('data.json', 'r', encoding='utf-8') as readfile:
+            file_data = json.load(readfile)
+            temp = file_data.get("DB_Data")
+            for idx, obj in enumerate(temp):
+                if obj["site_id"] == siteID and obj["device_id"] == deviceID and obj["reg_type"] == regType:
+                    row_data = (obj["site_id"], obj["device_id"], obj["reg_type"], obj["coordinates"])
+                    break
         row = row_data
         print(error)
     finally:
         if conn is not None:
             conn.close()
 
-    return row, path
+    return row
