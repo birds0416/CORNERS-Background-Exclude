@@ -22,7 +22,7 @@ def delete_from_json(site_id, device_id, reg_type, filename='data.json'):
 
         temp = file_data.get("DB_Data")
         for idx, obj in enumerate(temp):
-            if obj["site_id"] == site_id and obj["device_id"] == device_id and obj["reg_type"] == reg_type:
+            if obj["site_id"] == site_id and obj["dev_id"] == device_id and obj["reg_type"] == reg_type:
                 del temp[idx]
                 print("DELETE FROM data.json: SUCCESS")
             else:
@@ -45,8 +45,8 @@ def update_in_json(site_id, device_id, reg_type, update_data, imgPath, filename=
 
             temp = file_data.get("DB_Data")
             for idx, obj in enumerate(temp):
-                if obj["site_id"] == site_id and obj["device_id"] == device_id and obj["reg_type"] == reg_type:
-                    temp[idx]["coordinates"] = update_data
+                if obj["site_id"] == site_id and obj["dev_id"] == device_id and obj["reg_type"] == reg_type:
+                    temp[idx]["pos"] = update_data
                     if update_data == "":
                         print("UPDATE data.json: Update Data EMPTY")
                         isUpdated = False
@@ -61,9 +61,9 @@ def update_in_json(site_id, device_id, reg_type, update_data, imgPath, filename=
 
                 insert_data = {
                     "site_id": site_id,
-                    "device_id": device_id,
+                    "dev_id": device_id,
                     "reg_type": reg_type,
-                    "coordinates": update_data,
+                    "pos": update_data,
                     "img_path": imgPath,
                     "saved time": curr_date
                 }
@@ -73,7 +73,6 @@ def update_in_json(site_id, device_id, reg_type, update_data, imgPath, filename=
                 json.dump(file_data, f, indent=4)
         else:
             with open(filename, 'r+') as file:
-                print("adding")
                 file_data = json.load(file)
                 file_data["DB_Data"].append(insert_data)
                 print("INSERT INTO data.json: SUCCESS")
@@ -88,9 +87,9 @@ def update_in_json(site_id, device_id, reg_type, update_data, imgPath, filename=
 
         insert_data = {
             "site_id": site_id,
-            "device_id": device_id,
+            "dev_id": device_id,
             "reg_type": reg_type,
-            "coordinates": update_data,
+            "pos": update_data,
             "img_path": imgPath,
             "saved time": curr_date
         }
@@ -130,7 +129,7 @@ def connect():
     finally:
         if conn is not None:
             conn.close()
-            print('Database connection closed.')
+            print('Database connected.', params)
 
 # DB에 연결됐는지 확인
 def isCon():
@@ -141,11 +140,11 @@ def create_table():
     """ create tables in the PostgreSQL database"""
     commands = (
         """
-        CREATE TABLE IF NOT EXISTS config_values (
+        CREATE TABLE IF NOT EXISTS tbvision_except_region (
             site_id INT NOT NULL,
-            device_id INT NOT NULL,
+            dev_id INT NOT NULL,
             reg_type INT NOT NULL,
-            coordinates TEXT
+            pos TEXT
         )
         """)
 
@@ -175,7 +174,7 @@ def create_table():
 # DB 테이블에 데이터 삽입
 def insert_data(site_id, device_id, reg_type, coordinates, imgPath):
     """ insert a new vendor into the item data """
-    sql = """INSERT INTO config_values(site_id, device_id, reg_type, coordinates) VALUES(%s, %s, %s, %s)"""
+    sql = """INSERT INTO tbvision_except_region(site_id, dev_id, reg_type, pos) VALUES(%s, %s, %s, %s)"""
     record_data = (site_id, device_id, reg_type, coordinates)
     conn = None
 
@@ -186,9 +185,9 @@ def insert_data(site_id, device_id, reg_type, coordinates, imgPath):
 
     add_data = {
         "site_id": site_id,
-        "device_id": device_id,
+        "dev_id": device_id,
         "reg_type": reg_type,
-        "coordinates": coordinates,
+        "pos": coordinates,
         "img_path": imgPath,
         "saved time": curr_date
     }
@@ -209,14 +208,14 @@ def insert_data(site_id, device_id, reg_type, coordinates, imgPath):
         # commit the changes to the database
         conn.commit()
         add_to_json(add_data)
-        print("INSERT INTO config_values: SUCCESS")
+        print("INSERT INTO tbvision_except_region: SUCCESS")
 
         # close communication with the database
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
         add_to_json(add_data)
-        print("INSERT INTO config_values: FAILURE")
+        print("INSERT INTO tbvision_except_region: FAILURE")
         print(error)
     finally:
         if conn is not None:
@@ -239,7 +238,7 @@ def delete_data(site_id, device_id, reg_type):
         cur = conn.cursor()
 
         # execute the UPDATE  statement
-        cur.execute("DELETE FROM config_values WHERE site_id = %s and device_id = %s and reg_type = %s", (site_id, device_id, reg_type))
+        cur.execute("DELETE FROM tbvision_except_region WHERE site_id = %s and dev_id = %s and reg_type = %s", (site_id, device_id, reg_type))
 
         # get the number of updated rows
         rows_deleted = cur.rowcount
@@ -247,11 +246,11 @@ def delete_data(site_id, device_id, reg_type):
         # Commit the changes to the database
         conn.commit()
         if rows_deleted != 0:
-            print("DELETE FROM config_values: SUCCESS")
-            messagebox.showinfo(title="Delete Data Success", message="DELETE FROM config_values: SUCCESS")
+            print("DELETE FROM tbvision_except_region: SUCCESS")
+            messagebox.showinfo(title="Delete Data Success", message="DELETE FROM tbvision_except_region: SUCCESS")
         else:
-            print("DELETE FROM config_values: NO MATCHING DATA")
-            messagebox.showwarning(title="Delete Data Success", message="DELETE FROM config_values: NO MATCHING DATA")
+            print("DELETE FROM tbvision_except_region: NO MATCHING DATA")
+            messagebox.showwarning(title="Delete Data Success", message="DELETE FROM tbvision_except_region: NO MATCHING DATA")
 
         delete_from_json(site_id, device_id, reg_type)
 
@@ -260,7 +259,7 @@ def delete_data(site_id, device_id, reg_type):
 
     except (Exception, psycopg2.DatabaseError) as error:
         delete_from_json(site_id, device_id, reg_type)
-        print("DELETE FROM config_values: FAILURE")
+        print("DELETE FROM tbvision_except_region: FAILURE")
         print(error)
     finally:
         if conn is not None:
@@ -271,9 +270,9 @@ def delete_data(site_id, device_id, reg_type):
 # DB 테이블에서 데이터 업데이트
 def update_data(update_val, siteID, deviceID, regType, imgPath):
     """ update vendor name based on the vendor id """
-    sql = """ UPDATE config_values
-                SET coordinates = %s
-                WHERE site_id = %s and device_id = %s and reg_type = %s"""
+    sql = """ UPDATE tbvision_except_region
+                SET pos = %s
+                WHERE site_id = %s and dev_id = %s and reg_type = %s"""
     conn = None
     updated_rows = 0
 
@@ -297,11 +296,11 @@ def update_data(update_val, siteID, deviceID, regType, imgPath):
         conn.commit()
         if updated_rows != 0:
             update_in_json(siteID, deviceID, regType, update_val, imgPath)
-            print("UPDATE config_values: SUCCESS")
-            messagebox.showinfo(title="UPDATE config_values Success", message="UPDATE config_values: SUCCESS")
+            print("UPDATE tbvision_except_region: SUCCESS")
+            messagebox.showinfo(title="UPDATE tbvision_except_region Success", message="UPDATE tbvision_except_region: SUCCESS")
         else:
-            print("UPDATE config_values: NO MATCHING DATA")
-            messagebox.showwarning(title="UPDATE config_values FAILURE", message="UPDATE config_values: NO MATCHING DATA")
+            print("UPDATE tbvision_except_region: NO MATCHING DATA")
+            messagebox.showwarning(title="UPDATE tbvision_except_region FAILURE", message="UPDATE tbvision_except_region: NO MATCHING DATA")
 
 
         # Close communication with the PostgreSQL database
@@ -309,7 +308,7 @@ def update_data(update_val, siteID, deviceID, regType, imgPath):
 
     except (Exception, psycopg2.DatabaseError) as error:
         update_in_json(siteID, deviceID, regType, update_val, imgPath)
-        print("UPDATE config_values: FAILURE")
+        print("UPDATE tbvision_except_region: FAILURE")
         print(error)
     finally:
         if conn is not None:
@@ -321,8 +320,8 @@ def update_data(update_val, siteID, deviceID, regType, imgPath):
 def select_row(siteID, deviceID, regType):
     """ select row based on item_id """
     sql = """ select *
-                FROM config_values
-                WHERE site_id = %s and device_id = %s and reg_type = %s"""
+                FROM tbvision_except_region
+                WHERE site_id = %s and dev_id = %s and reg_type = %s"""
     conn = None
     row = None
 
@@ -349,8 +348,8 @@ def select_row(siteID, deviceID, regType):
             file_data = json.load(readfile)
             temp = file_data.get("DB_Data")
             for idx, obj in enumerate(temp):
-                if obj["site_id"] == siteID and obj["device_id"] == deviceID and obj["reg_type"] == regType:
-                    row_data = (obj["site_id"], obj["device_id"], obj["reg_type"], obj["coordinates"])
+                if obj["site_id"] == siteID and obj["dev_id"] == deviceID and obj["reg_type"] == regType:
+                    row_data = (obj["site_id"], obj["dev_id"], obj["reg_type"], obj["pos"])
                     break
         row = row_data
         print(error)
