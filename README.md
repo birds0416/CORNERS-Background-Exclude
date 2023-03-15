@@ -1,4 +1,4 @@
-# 대상 LS 예외구역 설정 Tool
+# 대상WL 예외구역 설정 Tool
 
 ## Installation 설치방법
 Windows CMD 창에서 실행
@@ -6,7 +6,7 @@ Windows CMD 창에서 실행
 ```shell
 cd "설치하고자 하는 경로"
 git clone http://192.168.10.233:30000/corners_dev_grp1/machine-learning/test-applications/python-applications/pythontools.git
-cd pythontools/대상LS\ 예외구역설정\ Tool/
+cd pythontools/대상WL\ 예외구역설정\ Tool/
 pip install -r requirements.txt
 ```
 
@@ -34,7 +34,15 @@ database.ini 파일에 있는 주소를 사용하는 DB 주소에 맞게 변경�
 
 1. 확인하고자 하는 데이터의 Site ID(대상의 경우 220901 고정), Device ID, Reg Type(0 / 1 / 2)을 설정합니다.
 2. **불러오기 버튼**을 누르면 로컬 컴퓨터의 파일 시스템에서 이미지를 불러올 수 있습니다.
-**이미지를 불러올 때 해당 장비의 이미지를 가져오는 것이 중요합니다. 다른 이미지를 불러오게 되면 다른 장비의 데이터가 변경되기 때문에 주의하셔야 합니다.**
+
+>**이미지를 불러올 때 해당 장비의 이미지를 가져오는 것이 중요합니다. 다른 이미지를 불러오게 되면 다른 장비의 데이터가 변경되기 때문에 주의하셔야 합니다. 또한 이미지의 경로에 영어이외의 언어가 포함되어있으면 안됩니다.**
+
+>##### 예를 들어)
+
+> 이미지 경로: "C:\Users\USER\Desktop\WLTool\대상WL_11번.png" (X)
+
+> 이미지 경로: "C:\Users\USER\Desktop\WLTool\WL_11.png" (O)
+
 3. DB에서 불러온 박스의 좌표값이 불러온 이미지 위에 그려집니다. 
 4. **(데이터를 불러오기만 할 때)** 키보드 q를 누르게 되면 이미지 윈도우가 닫히면서 좌표 값 영역에 불러온 좌표 데이터가 표시됩니다.
 5. **(수정할 때)** 지우고자 하는 박스 위에서 **Shift키**를 누른 채로 마우스 우클릭을 하면 해당 박스가 지워집니다.

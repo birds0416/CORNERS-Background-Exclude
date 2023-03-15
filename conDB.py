@@ -247,7 +247,6 @@ def delete_data(site_id, device_id, reg_type):
         conn.commit()
         if rows_deleted != 0:
             print("DELETE FROM tbvision_except_region: SUCCESS")
-            messagebox.showinfo(title="Delete Data Success", message="DELETE FROM tbvision_except_region: SUCCESS")
         else:
             print("DELETE FROM tbvision_except_region: NO MATCHING DATA")
             messagebox.showwarning(title="Delete Data Success", message="DELETE FROM tbvision_except_region: NO MATCHING DATA")

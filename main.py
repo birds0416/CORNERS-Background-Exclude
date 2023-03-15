@@ -12,6 +12,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
+from PIL import ImageTk, Image
 
 connect()
 create_table()
@@ -28,7 +29,7 @@ except:
 
 #Create an instance of Tkinter frame
 win= Tk()
-win.title("대상LS 예외구역 설정 Tool")
+win.title("대상WL 예외구역 설정 Tool")
 #Set the geometry of Tkinter frame
 win.geometry("600x300")
 
@@ -43,7 +44,7 @@ resultInsertData = []
 drawData = []
 def processImg(image_path):
     img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-    img = cv2.resize(img, (540, 960))
+    img = cv2.resize(img, (360, 640))
 
     global coord_list
     global temp
@@ -72,7 +73,7 @@ def processImg(image_path):
 
         if event == cv2.EVENT_LBUTTONDOWN:
             # displaying the coordinates on the Shell
-            coord_list.append([x * 2, y * 2])
+            coord_list.append([x * 3, y * 3])
             temp.append([x, y])
 
         if event == cv2.EVENT_RBUTTONDOWN:
@@ -82,7 +83,7 @@ def processImg(image_path):
 
     # Display the image
     cv2.namedWindow("image")
-    cv2.imshow("image", img)
+    # cv2.imshow("image", img)
     cv2.setMouseCallback('image', click_event)
     global line_color
     line_color = (0, 255, 0)
@@ -109,10 +110,13 @@ def processImg(image_path):
             cVLEntry.insert("1.0", coordinates)
             break
         elif key == ord("s"):
-            resultInsertData.append(coord_list)
-            drawData.append(temp)
-            coord_list = []
-            temp = []
+            if coord_list != []:
+                resultInsertData.append(coord_list)
+                drawData.append(temp)
+                coord_list = []
+                temp = []
+            else:
+                messagebox.showerror(title="Box Not Drawn", message="Box Not Drawn ERROR: 새로 그린 박스 없음")
 
 modtemp = []
 resultModifyData = []
@@ -120,7 +124,7 @@ drawModifyData = []
 noModify = True
 def modifyImg(image_path, pnt_datas):
     img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-    img = cv2.resize(img, (540, 960))
+    img = cv2.resize(img, (360, 640))
     cVLEntry.delete("1.0", END)
 
     global coord_list
@@ -138,7 +142,7 @@ def modifyImg(image_path, pnt_datas):
     for shape in pnt_datas:
         t = []
         for pnt in shape:
-            t.append([int(pnt[0] / 2), int(pnt[1] / 2)])
+            t.append([int(pnt[0] / 3), int(pnt[1] / 3)])
         drawModifyData.append(t)
 
     global ismodtempClear
@@ -181,7 +185,7 @@ def modifyImg(image_path, pnt_datas):
                         for shape in drawModifyData:
                             temp = []
                             for pnt in shape:
-                                temp.append([pnt[0] * 2, pnt[1] * 2])
+                                temp.append([pnt[0] * 3, pnt[1] * 3])
                             resultModifyData.append(temp)
                     else:
                         drawModifyData = []
@@ -196,7 +200,7 @@ def modifyImg(image_path, pnt_datas):
         if ismodtempClear:
             if event == cv2.EVENT_LBUTTONDOWN:
                 # displaying the coordinates on the Shell
-                coord_list.append([x * 2, y * 2])
+                coord_list.append([x * 3, y * 3])
                 modtemp.append([x, y])
 
             if event == cv2.EVENT_RBUTTONDOWN:
@@ -229,10 +233,13 @@ def modifyImg(image_path, pnt_datas):
             cv2.destroyAllWindows()
             break
         elif key == ord("s"):
-            resultModifyData.append(coord_list)
-            drawModifyData.append(modtemp)
-            coord_list = []
-            modtemp = []
+            if coord_list != []:
+                resultModifyData.append(coord_list)
+                drawModifyData.append(modtemp)
+                coord_list = []
+                modtemp = []
+            else:
+                messagebox.showerror(title="Box Not Drawn", message="Box Not Drawn ERROR: 새로 그린 박스 없음")
             
 def openDrawImg():
     global coord_list
@@ -251,7 +258,13 @@ def openDrawImg():
         dIDEntry.insert(0, "기기ID")
 
     # Read from files
-    path = askopenfilename()
+    path = askopenfilename(
+        title="select a file",
+        filetypes =(
+            ("Image files (*.png, *jpg)", ("*.png", "*.jpg")),
+            ("all files (*.*)","*.*")
+        )
+    )
     if path != '':
         print("user chose", path)
         imgPathEntry.insert("1.0", path)
@@ -265,25 +278,52 @@ def openDrawImg():
 def saveBtn():
     global isUpdate
     if isUpdate:
-        update_data(cVLEntry.get("1.0", END), sIDvalue.get(), dIDvalue.get(), rTPCombo.get()[0], imgPathEntry.get("1.0", END))
+        if dIDvalue.get() == "기기ID" or rTPCombo.get() == "예외구역유형 선택":
+            messagebox.showwarning(title="No Data selected", message="NO DATA SELECTED: 기기ID와 예외구역유형을 입력하세요.")
+        else:
+            update_data(cVLEntry.get("1.0", "end-1c"), sIDvalue.get(), dIDvalue.get(), rTPCombo.get()[0], imgPathEntry.get("1.0", "end-1c"))
+
+            # 좌표값, 파일 경로가 값이 있는 상태면 초기화
+            rTPCombo.set("예외구역유형 선택")
+            if isEmpty(imgPathEntry) != True:
+                imgPathEntry.delete("1.0", END)
+                imgPathEntry.insert("1.0", "")
+            if isEmpty(cVLEntry) != True:
+                cVLEntry.delete("1.0", END)
+                cVLEntry.insert("1.0", "좌표 값")
+            if isEmpty(dIDEntry) != True:
+                dIDEntry.delete(0, END)
+                dIDEntry.insert(0, "기기ID")
     else:
-        insert_data(sIDvalue.get(), dIDvalue.get(), rTPCombo.get()[0], cVLEntry.get("1.0", END), imgPathEntry.get("1.0", END))
-        messagebox.showinfo(title="Save Data Success", message="INSERT INTO config_values: SUCCESS")
+        if dIDvalue.get() == "기기ID" or rTPCombo.get() == "예외구역유형 선택":
+            messagebox.showwarning(title="No Data selected", message="NO DATA SELECTED: 기기ID와 예외구역유형을 입력하세요.")
+        else:
+            insert_data(sIDvalue.get(), dIDvalue.get(), rTPCombo.get()[0], cVLEntry.get("1.0", "end-1c"), imgPathEntry.get("1.0", "end-1c"))
+            if isCon():
+                messagebox.showinfo(title="Save Data Success", message="INSERT INTO tbvision_except_region, data.json: SUCCESS")
+            else:
+                messagebox.showinfo(title="Save Data Success", message="INSERT INTO data.json: SUCCESS")
+
         
-    # 좌표값, 파일 경로가 값이 있는 상태면 초기화
-    rTPCombo.set("예외구역유형 선택")
-    if isEmpty(imgPathEntry) != True:
-        imgPathEntry.delete("1.0", END)
-        imgPathEntry.insert("1.0", "")
-    if isEmpty(cVLEntry) != True:
-        cVLEntry.delete("1.0", END)
-        cVLEntry.insert("1.0", "좌표 값")
-    if isEmpty(dIDEntry) != True:
-        dIDEntry.delete(0, END)
-        dIDEntry.insert(0, "기기ID")
+            # 좌표값, 파일 경로가 값이 있는 상태면 초기화
+            rTPCombo.set("예외구역유형 선택")
+            if isEmpty(imgPathEntry) != True:
+                imgPathEntry.delete("1.0", END)
+                imgPathEntry.insert("1.0", "")
+            if isEmpty(cVLEntry) != True:
+                cVLEntry.delete("1.0", END)
+                cVLEntry.insert("1.0", "좌표 값")
+            if isEmpty(dIDEntry) != True:
+                dIDEntry.delete(0, END)
+                dIDEntry.insert(0, "기기ID")
 
 def deleteBtn():
     delete_data(sIDvalue.get(), dIDvalue.get(), rTPCombo.get()[0])
+    if isCon():
+        messagebox.showinfo(title="Delete Data Success", message="DELETE FROM tbvision_except_region, data.json: SUCCESS")
+    else:
+        messagebox.showinfo(title="Delete Data Success", message="DELETE FROM data.json: SUCCESS")
+
     rTPCombo.set("예외구역유형 선택")
     if isEmpty(dIDEntry) != True:
         dIDEntry.delete(0, END)
@@ -297,92 +337,82 @@ def updateBtn():
     global isUpdate
     isUpdate = True
 
+    if isEmpty(imgPathEntry) != True:
+        imgPathEntry.delete("1.0", END)
+        imgPathEntry.insert("1.0", "")
+    if isEmpty(cVLEntry) != True:
+        cVLEntry.delete("1.0", END)
+        cVLEntry.insert("1.0", "좌표 값")
+
     if isCon() == False:
         messagebox.showwarning(title="DB Connection FAIL", message="DB Connection FAIL: 데이터를 불러올 수 없음")
-
-
-    modify_row_data = select_row(sIDvalue.get(), dIDvalue.get(), rTPCombo.get()[0])
-    if modify_row_data != None:
-        # Read from files
-        mod_imgPath = askopenfilename()
-        if mod_imgPath != '':
-            print("user chose", mod_imgPath)
-            imgPathEntry.insert("1.0", mod_imgPath)
-
-            # tempdata는 길이가 1인 string 좌표
-            shapes = []
-            tempdata = modify_row_data[3]
-            if ':' in tempdata:
-                tempdata = modify_row_data[3].split(" : ")
-            else:
-                tempdata = [tempdata]
-            
-            for tmp in tempdata:
-                each = tmp.split(", ")
-                pnts = []
-                for e in each:
-                    X = int(e.split(',')[0])
-                    Y = int(e.split(',')[1])
-                    pnts.append([X, Y])
-                shapes.append(pnts)
-
-            modifyImg(mod_imgPath, shapes)
-            if noModify:
-                cVLEntry.insert("1.0", modify_row_data[3])
-            else:
-                coordinates = setcoordinates(resultModifyData)
-                cVLEntry.insert("1.0", coordinates)
-                noModify = True
-        else:
-            print("Image Not Selected")
     else:
-        messagebox.showwarning(title="No data in data.json", message="NO DATA FAILURE: 새 데이터를 추가하세요.")
+        modify_row_data = None
+        if dIDvalue.get() == "기기ID" or rTPCombo.get() == "예외구역유형 선택":
+            messagebox.showwarning(title="No Data selected", message="NO DATA SELECTED: 불러올 데이터를 선택하세요.")
+        else:
+            modify_row_data = select_row(sIDvalue.get(), dIDvalue.get(), rTPCombo.get()[0])
+            
+            if modify_row_data != None:
+                # Read from files
+                mod_imgPath = askopenfilename(
+                    title="select a file",
+                    filetypes =(
+                        ("Image files (*.png, *jpg)", ("*.png", "*.jpg")),
+                        ("all files (*.*)","*.*")
+                    )
+                )
+                if mod_imgPath != '':
+                    print("user chose", mod_imgPath)
+                    imgPathEntry.insert("1.0", mod_imgPath)
+
+                    # tempdata는 길이가 1인 string 좌표
+                    shapes = []
+                    tempdata = modify_row_data[3]
+                    if ':' in tempdata:
+                        tempdata = modify_row_data[3].split(" : ")
+                    else:
+                        tempdata = [tempdata]
+                    
+                    for tmp in tempdata:
+                        each = tmp.split(", ")
+                        pnts = []
+                        for e in each:
+                            X = int(e.split(',')[0])
+                            Y = int(e.split(',')[1])
+                            pnts.append([X, Y])
+                        shapes.append(pnts)
+
+                    modifyImg(mod_imgPath, shapes)
+                    if noModify:
+                        cVLEntry.insert("1.0", modify_row_data[3])
+                    else:
+                        coordinates = setcoordinates(resultModifyData)
+                        cVLEntry.insert("1.0", coordinates)
+                        noModify = True
+                else:
+                    print("Image Not Selected")
+            else:
+                messagebox.showwarning(title="No data in DB", message="NO DATA FAILURE: 새 데이터를 추가하세요.")
 
 if __name__ == "__main__":
-    # baserow = 0
 
-    # ''' Image Load Part '''
-    # imgPathEntry = Entry(win, width=60)
-    # imgPathEntry.grid(row=baserow+1, column=1, columnspan=3, padx=10)
-    # Button(text="이미지 불러오기", width=15, command=openDrawImg).grid(row=baserow+1, column=0, padx=10, pady=5)
-    # ''' Image Load Part End '''
+    ''' Show Connection '''
+    contain0 = Frame(win)
+    contain0.pack(side="top", anchor=NW, expand=True, fill=BOTH, padx=10)
+    conn_status = Label(contain0, text="DB연결상태", font=('Arial', 10))
+    conn_status.pack(side="left", padx=(30, 0))
 
-    # ''' Informations Part '''
-    # site_id = Label(win, text="Site ID", font=('Arial', 10))
-    # device_id = Label(win, text="Device ID", font=('Arial', 10))
-    # reg_type = Label(win, text="Reg Type", font=('Arial', 10))
-    # cIDvalue = Label(win, text="Coordinates", font=('Arial', 10))
+    status_green = ImageTk.PhotoImage(Image.open("green_circle.png").resize((10, 10)))
+    status_red = ImageTk.PhotoImage(Image.open("red_circle.png").resize((20, 20)))
 
-    # site_id.grid(row=baserow+2, padx=(80, 10), pady=5)
-    # device_id.grid(row=baserow+3, padx=(65, 10), pady=5)
-    # reg_type.grid(row=baserow+4, padx=(62, 10), pady=5)
-    # cIDvalue.grid(row=baserow+5, padx=(48, 10), pady=5)
+    status_green_label = Label(contain0, image=status_green)
+    status_red_label = Label(contain0, image=status_red)
 
-    # sIDvalue = StringVar(win, value="220901")
-    # dIDvalue = StringVar(win, value="기기ID")
-    # cVLvalue = StringVar(win, value="좌표 값")
-
-    # sIDEntry = Entry(win, width=18, textvariable = sIDvalue)
-    # dIDEntry = Entry(win, width=18, textvariable = dIDvalue)
-    # cVLEntry = Entry(win, width=76, textvariable = cVLvalue)
-    
-    # rTPCombo = ttk.Combobox(win, width=15, height=5, values=[0, 1, 2])
-    # rTPCombo.set("예외구역유형 선택")
-
-    # sIDEntry.grid(row=baserow+2, column=1)
-    # dIDEntry.grid(row=baserow+3, column=1)
-    # rTPCombo.grid(row=baserow+4, column=1)
-    # cVLEntry.grid(row=baserow+5, column=1, columnspan=4)
-    # ''' Informations Part End'''
-
-    # ''' Save Button '''
-    # Button(text="저장", width=15, command=saveBtn).grid(row=baserow+1, column=4)
-    
-    # ''' Delete Button '''
-    # Button(text="삭제", width=15, command=deleteBtn).grid(row=baserow+2, column=4)
-    
-    # ''' Find Data Button '''
-    # Button(text="불러오기", width=15, command=updateBtn).grid(row=baserow+3, column=4)
+    if isCon() == False:
+        status_red_label.pack(side="left")
+    else:
+        status_green_label.pack(side="left")
 
     ''' Image Load Part '''
     contain1 = Frame(win)
