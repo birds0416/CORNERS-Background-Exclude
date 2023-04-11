@@ -95,6 +95,12 @@ def update_in_json(site_id, device_id, reg_type, update_data, imgPath, filename=
         }
         add_to_json(insert_data)
 
+def isJsonEmpty(filename='data.json'):
+    with open(filename, 'r', encoding='utf-8') as file:
+        file_data = json.load(file)
+        temp = file_data.get("DB_Data")
+        return temp == []
+
 # DB에 연결
 def connect():
     """ Connect to the PostgreSQL database server """

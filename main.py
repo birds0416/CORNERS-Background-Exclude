@@ -345,7 +345,9 @@ def updateBtn():
         cVLEntry.insert("1.0", "좌표 값")
 
     if isCon() == False:
-        messagebox.showwarning(title="DB Connection FAIL", message="DB Connection FAIL: 데이터를 불러올 수 없음")
+        messagebox.showwarning(title="DB Connection FAIL", message="DB Connection FAIL: DB 데이터를 불러올 수 없음\nJSON 데이터를 불러옵니다.")
+    if isJsonEmpty() == True and isCon() == False:
+        messagebox.showwarning(title="data.json empty", message="data.json EMPTY: JSON 데이터를 불러올 수 없음")
     else:
         modify_row_data = None
         if dIDvalue.get() == "기기ID" or rTPCombo.get() == "예외구역유형 선택":
